@@ -21,7 +21,9 @@ module Foundation
           legal_assent: checkout_params[:legal_assent],
           ip: request.remote_ip,
           user_agent: request.user_agent,
-          checkout_nonce: storefront_checkout_nonce
+          checkout_nonce: storefront_checkout_nonce,
+          shipping_method: checkout_params[:shipping_method],
+          shipping: checkout_params.slice(:name, :line1, :line2, :city, :region, :postal_code, :country)
         )
         token = ReceiptAccess.return_token_for(order)
         session[:storefront_pending_checkout] = { "reference" => order.public_reference, "token" => token }
@@ -66,7 +68,10 @@ module Foundation
       private
 
       def checkout_params
-        params.fetch(:checkout, {}).permit(:email, :legal_assent)
+        params.fetch(:checkout, {}).permit(
+          :email, :legal_assent, :shipping_method,
+          :name, :line1, :line2, :city, :region, :postal_code, :country
+        )
       end
 
       def pending_checkout

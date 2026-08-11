@@ -53,10 +53,14 @@ class StorefrontCheckoutServicesTest < ActiveSupport::TestCase
       assert_equal "cs_test_server", result.session_id
     end
 
-    item = gateway.attributes.fetch(:line_items).sole
+    items = gateway.attributes.fetch(:line_items)
+    assert_equal 2, items.length
+    item = items.find { |entry| entry.dig(:price_data, :product_data, :name) == @product.name }
+    shipping = items.find { |entry| entry.dig(:price_data, :product_data, :name).start_with?("Shipping") }
     assert_equal 1_599, item.dig(:price_data, :unit_amount)
     assert_equal 2, item[:quantity]
-    assert_equal @product.name, item.dig(:price_data, :product_data, :name)
+    assert_equal 550, shipping.dig(:price_data, :unit_amount)
+    assert_equal 1, shipping[:quantity]
     assert_equal @order.public_reference, gateway.attributes[:client_reference_id]
     assert_equal({ order_reference: @order.public_reference }, gateway.attributes[:metadata])
     assert_match %r{\Ahttps://example\.com/storefront/orders/}, gateway.attributes[:success_url]
@@ -346,9 +350,9 @@ class StorefrontCheckoutServicesTest < ActiveSupport::TestCase
         status: "complete", amount_total: @order.total_cents, currency: "usd",
         customer_details: { email: @order.email }, payment_intent: "pi_test_payment"
       }
-      gateway.line_items = { data: @order.line_items.map { |item|
-        { description: item.name, price: { unit_amount: item.unit_price_cents, currency: item.currency.downcase },
-          quantity: item.quantity, amount_total: item.line_total_cents }
+      gateway.line_items = { data: Foundation::Storefront::StripeCheckoutSession.line_item_tuples(@order).map { |name, unit_amount, currency, quantity, amount_total|
+        { description: name, price: { unit_amount: unit_amount, currency: currency.downcase },
+          quantity: quantity, amount_total: amount_total }
       } }
     end
   end

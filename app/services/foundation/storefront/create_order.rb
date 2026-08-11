@@ -7,7 +7,8 @@ module Foundation
       class Unavailable < StandardError; end
       MAX_DISTINCT_ITEMS = 20
 
-      def self.call(cart:, email:, user:, legal_assent:, ip:, user_agent:, checkout_nonce: SecureRandom.urlsafe_base64(32))
+      def self.call(cart:, email:, user:, legal_assent:, ip:, user_agent:, checkout_nonce: SecureRandom.urlsafe_base64(32),
+        shipping: {}, shipping_method: "standard")
         raise InvalidCart, "Your cart is empty." if cart.blank?
         raise InvalidCart, "You must accept the Terms and Privacy Policy." unless legal_assent == "1" || legal_assent == true
 
@@ -17,13 +18,12 @@ module Foundation
 
         requested = normalize_cart(cart)
         raise InvalidCart, "A cart may contain at most #{MAX_DISTINCT_ITEMS} different products." if requested.length > MAX_DISTINCT_ITEMS
+        shipping_method = "standard" unless Shipping.valid_method?(shipping_method)
+        shipping_cents = Shipping.cents_for(shipping_method)
         order = ApplicationRecord.transaction do
           products = Product.where(id: requested.keys).order(:id).lock.index_by(&:id)
           raise InvalidCart, "A product in your cart no longer exists." unless products.size == requested.size
 
-          # A concurrent request with this nonce may have committed while this
-          # transaction waited for product locks. Reuse it before evaluating
-          # availability or touching inventory again.
           replay = Order.find_by(checkout_key_digest: checkout_key_digest)
           next replay if replay
 
@@ -44,6 +44,15 @@ module Foundation
             currency: currencies.first,
             subtotal_cents: 0,
             total_cents: 0,
+            shipping_cents: shipping_cents,
+            shipping_method: shipping_method,
+            shipping_name: shipping[:name],
+            shipping_line1: shipping[:line1],
+            shipping_line2: shipping[:line2],
+            shipping_city: shipping[:city],
+            shipping_region: shipping[:region],
+            shipping_postal_code: shipping[:postal_code],
+            shipping_country: shipping[:country],
             terms_version: Foundation::Legal::TERMS_VERSION,
             privacy_version: Foundation::Legal::PRIVACY_VERSION,
             legal_accepted_at: Time.current,
@@ -68,6 +77,7 @@ module Foundation
             order.total_cents += line_total
             product.update!(inventory_quantity: product.inventory_quantity - quantity)
           end
+          order.total_cents += shipping_cents
           order.save!
           order
         end

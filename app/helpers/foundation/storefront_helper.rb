@@ -17,5 +17,11 @@ module Foundation
         tag.div("No image available", class: class_names(class_name, "storefront-image-placeholder"), role: "img", aria: { label: alt })
       end
     end
+
+    # Order history lookup link is a single source of truth used from the
+    # receipt, cart, and any future navigation.
+    def storefront_order_lookup_link(label = "Look up past orders", class_name: nil)
+      link_to label, storefront_order_lookup_path, class: class_name
+    end
   end
 end

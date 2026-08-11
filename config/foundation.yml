@@ -47,7 +47,9 @@ shared:
   # limited licenses/capacity. A physical-goods app must first implement
   # address collection, shipping/tax calculation, and matching legal terms;
   # readiness rejects any unimplemented mode instead of silently shipping.
-  storefront_fulfillment_mode: "digital"
+  # Tidewater Roast ships physical coffee: the storefront now collects a
+  # shipping address and charges flat shipping (see Shipping service).
+  storefront_fulfillment_mode: "physical"
 
   # A live production storefront refuses readiness until an operator has
   # completed the commerce-specific legal/identity checklist in
@@ -56,7 +58,9 @@ shared:
 
   # Exact lowercase HTTPS hosts permitted for browser-rendered external
   # product images. Empty (the safe default) requires Active Storage uploads.
-  storefront_external_image_hosts: []
+  # Unsplash hosts the seed catalog's coffee photos (browser-rendered).
+  storefront_external_image_hosts:
+    - images.unsplash.com
 
   # Host capacity ceilings for /healthcheck disk and memory probes (percent used).
   # Probes pass with an informational note when the platform cannot report figures.

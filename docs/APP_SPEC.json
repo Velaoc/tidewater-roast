@@ -10,15 +10,8 @@
     {
       "name": "Product",
       "relationships": [
-        "belongs to Category",
         "has many OrderLineItems",
         "has many CartLineItems"
-      ]
-    },
-    {
-      "name": "Category",
-      "relationships": [
-        "has many Products"
       ]
     },
     {
@@ -26,7 +19,8 @@
       "relationships": [
         "has many OrderLineItems",
         "belongs to customer email",
-        "has signed access token for lookup"
+        "has shipping address and shipping charge",
+        "has signed access token for receipt lookup"
       ]
     },
     {
@@ -48,23 +42,23 @@
   "workflows": [
     {
       "name": "Browse products",
-      "description": "Shop by category; product cards show photo, roast level, price; detail page shows tasting notes"
+      "description": "Product cards show photo, roast level, price; detail page shows tasting notes"
     },
     {
       "name": "Add to cart",
-      "description": "Add bags to a session cart, adjust quantity, see running total"
+      "description": "Add bags to a session cart, adjust quantity, see running subtotal"
     },
     {
       "name": "Guest checkout",
-      "description": "Checkout with just an email; order completes and receipt is reachable through a signed, expiring access link"
+      "description": "Checkout with an email plus shipping address and method; order completes and receipt is reachable through a signed, expiring access link"
     },
     {
       "name": "Past orders",
-      "description": "Customer enters their email on the order-lookup page and sees their order history via signed links"
+      "description": "Customer enters their email on the order-lookup page and sees their past orders via signed links"
     },
     {
       "name": "Admin manage",
-      "description": "Admin manages products (photo, price, active), categories, and views/fulfills orders"
+      "description": "Admin manages products (photo, price, active) and views/cancels orders"
     }
   ],
   "modules": [

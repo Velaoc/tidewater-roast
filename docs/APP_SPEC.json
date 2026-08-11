@@ -1,0 +1,80 @@
+{
+  "name": "Tidewater Roast",
+  "purpose": "Online store for Tidewater Roast, a small coffee roaster: browse coffees with photos and prices, cart, guest checkout, and order history lookup.",
+  "actors": [
+    "Guest shopper",
+    "Customer (order lookup by email via signed links)",
+    "Admin (roaster owner)"
+  ],
+  "entities": [
+    {
+      "name": "Product",
+      "relationships": [
+        "belongs to Category",
+        "has many OrderLineItems",
+        "has many CartLineItems"
+      ]
+    },
+    {
+      "name": "Category",
+      "relationships": [
+        "has many Products"
+      ]
+    },
+    {
+      "name": "Order",
+      "relationships": [
+        "has many OrderLineItems",
+        "belongs to customer email",
+        "has signed access token for lookup"
+      ]
+    },
+    {
+      "name": "OrderLineItem",
+      "relationships": [
+        "belongs to Order",
+        "belongs to Product",
+        "snapshots unit price and name at purchase"
+      ]
+    },
+    {
+      "name": "Cart",
+      "relationships": [
+        "session-scoped",
+        "has many CartLineItems"
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Browse products",
+      "description": "Shop by category; product cards show photo, roast level, price; detail page shows tasting notes"
+    },
+    {
+      "name": "Add to cart",
+      "description": "Add bags to a session cart, adjust quantity, see running total"
+    },
+    {
+      "name": "Guest checkout",
+      "description": "Checkout with just an email; order completes and receipt is reachable through a signed, expiring access link"
+    },
+    {
+      "name": "Past orders",
+      "description": "Customer enters their email on the order-lookup page and sees their order history via signed links"
+    },
+    {
+      "name": "Admin manage",
+      "description": "Admin manages products (photo, price, active), categories, and views/fulfills orders"
+    }
+  ],
+  "modules": [
+    "storefront"
+  ],
+  "integrations": [
+    {
+      "name": "Stripe",
+      "demo_adapter": true
+    }
+  ],
+  "seed_demo": "Six coffees across three categories (Single Origin, Blends, Espresso) with photos, roast levels, tasting notes and prices; one demo order tied to a demo email shown on the order-lookup page."
+}

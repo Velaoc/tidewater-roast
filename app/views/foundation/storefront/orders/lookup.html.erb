@@ -1,0 +1,27 @@
+<% title "Past orders" %>
+<section class="md-section"><div class="md-section__inner md-stack">
+  <div class="storefront-heading-row"><div><p class="md-section__eyebrow">Order history</p><h1>Look up your past orders</h1></div></div>
+  <p>Enter the email you checked out with. Each order links to a private receipt page via a signed, expiring link — no account needed.</p>
+
+  <%= form_with scope: :orders, url: storefront_order_lookup_results_path, class: "md-stack" do |form| %>
+    <div class="md-field"><%= form.label :email, "Email used at checkout" %><%= form.email_field :email, required: true, autocomplete: "email", maxlength: 254 %></div>
+    <%= form.submit "Find my orders", class: "md-button md-button--filled" %>
+  <% end %>
+
+  <% if defined?(@orders) && @orders.present? %>
+    <h2><%= pluralize(@orders.length, "order") %> found</h2>
+    <div class="md-list">
+      <% @orders.each do |order| %>
+        <div class="md-list-item">
+          <div><strong><%= order.public_reference %></strong><br><span><%= l(order.created_at, format: :long) %> &middot; <%= order.state.titleize %></span></div>
+          <strong><%= storefront_money(order.total_cents, order.currency) %></strong>
+          <%= link_to "View receipt", storefront_order_path(order.public_reference, access_token: Foundation::Storefront::ReceiptAccess.token_for(order)), class: "md-button md-button--tonal" %>
+        </div>
+      <% end %>
+    </div>
+  <% elsif defined?(@orders) %>
+    <div class="md-card md-card--filled"><h2>No orders found</h2><p>We couldn't find any completed orders for that email. Double-check the address you used at checkout.</p></div>
+  <% end %>
+
+  <div class="md-actions"><%= link_to "Back to shop", storefront_products_path, class: "md-button md-button--text" %></div>
+</div></section>

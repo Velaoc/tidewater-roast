@@ -30,11 +30,17 @@ module Foundation
       validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }, length: { maximum: 254 }
       validates :state, inclusion: { in: STATES }
       validates :currency, format: { with: /\A[A-Z]{3}\z/ }
-      validates :subtotal_cents, :total_cents,
+      validates :subtotal_cents, :total_cents, :shipping_cents,
         numericality: { only_integer: true, greater_than_or_equal_to: 0 }
       validates :terms_version, :privacy_version, :legal_accepted_at, :reservation_expires_at, presence: true
       validates :stripe_session_id, :provider_payment_id, uniqueness: true, allow_nil: true
+      validates :shipping_method, inclusion: { in: Shipping::METHODS.keys }
+      validates :shipping_country, format: { with: /\A[A-Z]{2}\z/ }, allow_nil: true
+      validates :shipping_name, :shipping_line1, :shipping_city, :shipping_postal_code, :shipping_country,
+        presence: true, if: :requires_shipping_address?
       validate :totals_match
+
+      scope :for_email, ->(email) { where("lower(email) = ?", email.to_s.strip.downcase) }
 
       def transition_to!(new_state, at: Time.current)
         new_state = new_state.to_s
@@ -45,9 +51,20 @@ module Foundation
         update!(attributes)
       end
 
+      def shipping_address
+        return if shipping_name.blank?
+
+        [ shipping_line1, shipping_line2, shipping_city, shipping_region, shipping_postal_code, shipping_country ]
+          .compact_blank.join(", ")
+      end
+
       class InvalidTransition < StandardError; end
 
       private
+
+      def requires_shipping_address?
+        state != "canceled" && state != "refunded"
+      end
 
       def assign_public_reference
         self.public_reference ||= loop do
@@ -59,10 +76,12 @@ module Foundation
       def normalize_fields
         self.email = email.to_s.strip.downcase
         self.currency = currency.to_s.strip.upcase
+        self.shipping_country = shipping_country.to_s.strip.upcase.presence
+        self.shipping_cents = shipping_cents.to_i
       end
 
       def totals_match
-        errors.add(:total_cents, "must equal subtotal") unless total_cents == subtotal_cents
+        errors.add(:total_cents, "must equal subtotal plus shipping") unless total_cents == subtotal_cents + shipping_cents
       end
     end
   end

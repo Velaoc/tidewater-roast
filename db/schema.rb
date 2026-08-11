@@ -641,6 +641,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_140000) do
     t.bigint "total_cents", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
+    t.index ["checkout_key_digest"], name: "index_storefront_orders_on_checkout_key_digest", unique: true    t.bigint "user_id"
+    t.string "shipping_name"
+    t.string "shipping_line1"
+    t.string "shipping_line2"
+    t.string "shipping_city"
+    t.string "shipping_region"
+    t.string "shipping_postal_code"
+    t.string "shipping_country", limit: 2
+    t.string "shipping_method", default: "standard", null: false
+    t.bigint "shipping_cents", default: 0, null: false
     t.index ["checkout_key_digest"], name: "index_storefront_orders_on_checkout_key_digest", unique: true
     t.index ["provider_payment_id"], name: "index_storefront_orders_on_provider_payment_id", unique: true, where: "(provider_payment_id IS NOT NULL)"
     t.index ["public_reference"], name: "index_storefront_orders_on_public_reference", unique: true
@@ -649,10 +659,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_140000) do
     t.index ["stripe_session_id"], name: "index_storefront_orders_on_stripe_session_id", unique: true, where: "(stripe_session_id IS NOT NULL)"
     t.index ["user_id", "created_at"], name: "index_storefront_orders_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_storefront_orders_on_user_id"
+    t.check_constraint "currency::text = upper(currency::text)    t.index ["user_id"], name: "index_storefront_orders_on_user_id"
+    t.index ["email"], name: "index_storefront_orders_on_email"
     t.check_constraint "currency::text = upper(currency::text) AND currency::text ~ '^[A-Z]{3}$'::text", name: "storefront_orders_currency_format"
     t.check_constraint "length(btrim(email::text)) > 0", name: "storefront_orders_email_present"
     t.check_constraint "state::text = ANY (ARRAY['pending'::character varying::text, 'paid'::character varying::text, 'fulfilled'::character varying::text, 'canceled'::character varying::text, 'refunded'::character varying::text])", name: "storefront_orders_state_allowed"
-    t.check_constraint "subtotal_cents = total_cents", name: "storefront_orders_total_matches_subtotal"
+    t.check_constraint "total_cents = subtotal_cents + shipping_cents", name: "storefront_orders_total_matches_items"
     t.check_constraint "subtotal_cents >= 0 AND total_cents >= 0", name: "storefront_orders_totals_nonnegative"
   end
 

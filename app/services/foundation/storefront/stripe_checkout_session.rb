@@ -44,16 +44,7 @@ module Foundation
           mode: "payment",
           client_reference_id: order.public_reference,
           customer_email: order.email,
-          line_items: order.line_items.map do |item|
-            {
-              price_data: {
-                currency: item.currency.downcase,
-                unit_amount: item.unit_price_cents,
-                product_data: { name: item.name }
-              },
-              quantity: item.quantity
-            }
-          end.then { |items| items << shipping_line_item(order) if order.shipping_cents.positive? },
+          line_items: session_line_items(order),
           metadata: { order_reference: order.public_reference },
           payment_intent_data: { metadata: { order_reference: order.public_reference } },
           expires_at: order.reservation_expires_at.to_i,
@@ -61,6 +52,32 @@ module Foundation
           cancel_url: "#{base_url}/storefront/cart"
         }
       end
+      def self.session_line_items(order)
+        line_item_tuples(order).map do |name, unit_amount, _currency, quantity, _amount_total|
+          {
+            price_data: {
+              currency: order.currency.downcase,
+              unit_amount: unit_amount,
+              product_data: { name: name }
+            },
+            quantity: quantity
+          }
+        end
+      end
+
+      # Canonical server-side line items (products + shipping) shared with the
+      # webhook verifier so what we charge is exactly what we verify.
+      def self.line_item_tuples(order)
+        tuples = order.line_items.map do |item|
+          [ item.name, item.unit_price_cents, item.currency, item.quantity, item.line_total_cents ]
+        end
+        if order.shipping_cents.positive?
+          tuples << [ "Shipping (#{Shipping.name_for(order.shipping_method)})",
+                      order.shipping_cents, order.currency, 1, order.shipping_cents ]
+        end
+        tuples
+      end
+
       private_class_method :session_attributes
 
       def self.base_url(runtime_config: Foundation.runtime_config)

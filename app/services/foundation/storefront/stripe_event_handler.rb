@@ -125,9 +125,7 @@ module Foundation
           [ value(item, :description).to_s, integer(value(price, :unit_amount)),
             value(price, :currency).to_s.upcase, integer(value(item, :quantity)), integer(value(item, :amount_total)) ]
         end.sort
-        expected = order.line_items.map do |item|
-          [ item.name, item.unit_price_cents, item.currency, item.quantity, item.line_total_cents ]
-        end.sort
+        expected = Foundation::Storefront::StripeCheckoutSession.line_item_tuples(order).sort
         raise VerificationError, "line_items_mismatch" unless actual == expected
       end
       private_class_method :verify_payment!

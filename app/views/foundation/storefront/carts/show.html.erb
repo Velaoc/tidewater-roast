@@ -18,7 +18,7 @@
       <% end %>
     </div>
     <% currency = items.first.first.currency %><% total = items.sum { |product, quantity| product.price_cents * quantity.to_i } %>
-    <div class="storefront-total"><span>Total</span><strong><%= storefront_money(total, currency) %></strong></div>
+    <div class="storefront-total"><span>Subtotal (shipping added at checkout)</span><strong><%= storefront_money(total, currency) %></strong></div>
     <div class="md-actions"><%= link_to "Continue to checkout", storefront_checkout_path, class: "md-button md-button--filled" %></div>
   <% else %>
     <div class="md-card md-card--filled"><h2>Your cart is empty</h2><p>Browse the catalog to find something you like.</p><%= link_to "Shop products", storefront_products_path, class: "md-button md-button--filled" %></div>

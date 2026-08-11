@@ -65,7 +65,6 @@ module Foundation
             quantity = requested.fetch(product.id)
             line_total = product.price_cents * quantity
             order.line_items.build(
-              order_id: order.id,
               product: product,
               name: product.name,
               sku: product.sku,

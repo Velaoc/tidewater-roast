@@ -31,7 +31,7 @@ class StorefrontModelsTest < ActiveSupport::TestCase
     order = create_storefront_order(product: product, quantity: 2)
     item = order.line_items.first
 
-    assert_equal 4_690, order.total_cents
+    assert_equal 5_240, order.total_cents # 2 x 2345 + 550 standard shipping
     assert_equal [ product.name, product.sku, 2_345, 2 ], [ item.name, item.sku, item.unit_price_cents, item.quantity ]
     assert_equal 2, product.reload.inventory_quantity
     product.update!(name: "Renamed", price_cents: 9_999)

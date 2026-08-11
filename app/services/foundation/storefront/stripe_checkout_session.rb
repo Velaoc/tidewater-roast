@@ -53,7 +53,7 @@ module Foundation
               },
               quantity: item.quantity
             }
-          end,
+          end.then { |items| items << shipping_line_item(order) if order.shipping_cents.positive? },
           metadata: { order_reference: order.public_reference },
           payment_intent_data: { metadata: { order_reference: order.public_reference } },
           expires_at: order.reservation_expires_at.to_i,

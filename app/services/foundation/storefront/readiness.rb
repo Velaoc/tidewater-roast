@@ -9,8 +9,9 @@ module Foundation
       def self.call(environment: ENV, runtime_config: Foundation.runtime_config, settlement: false)
         return Result.new(ready?: true, mode: "disabled", errors: []) unless Foundation.storefront_enabled? || settlement
         settlement_only = settlement && !Foundation.storefront_enabled?
-        fulfillment_error = if Foundation.storefront_enabled? && Rails.configuration.x.foundation[:storefront_fulfillment_mode] != "digital"
-          "storefront_fulfillment_mode must be digital; shipping is not implemented"
+        fulfillment_mode = Rails.configuration.x.foundation[:storefront_fulfillment_mode].to_s
+        unless %w[digital physical].include?(fulfillment_mode)
+          fulfillment_error = "storefront_fulfillment_mode must be digital or physical"
         end
         if runtime_config.preview?
           if runtime_config.simulator? && !settlement_only

@@ -42,6 +42,8 @@ module Foundation
 
       scope :for_email, ->(email) { where("lower(email) = ?", email.to_s.strip.downcase) }
 
+      scope :for_email, ->(email) { where("lower(email) = ?", email.to_s.strip.downcase) }
+
       def transition_to!(new_state, at: Time.current)
         new_state = new_state.to_s
         raise InvalidTransition, "#{state} cannot transition to #{new_state}" unless TRANSITIONS.fetch(state).include?(new_state)
@@ -63,7 +65,7 @@ module Foundation
       private
 
       def requires_shipping_address?
-        state != "canceled" && state != "refunded"
+        shipping_cents.positive?
       end
 
       def assign_public_reference
